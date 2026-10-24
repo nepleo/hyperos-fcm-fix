@@ -258,6 +258,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        TaskVisibility.apply(this)
+        BootStartup.onShizukuReady(this)
         if (::settingsStore.isInitialized) {
             refreshState()
             loadInstalledApps()
@@ -1245,6 +1247,8 @@ private fun ProtectionCard(
                 selectedMinutes = state.settings.intervalMinutes,
                 onIntervalSelected = onIntervalSelected,
             )
+            HideTaskPreference()
+            BootStartupPreference()
             Button(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onApplyNow,
@@ -1278,7 +1282,7 @@ private fun PeriodicEnforcementFrequencyRow(
     onIntervalSelected: (Long) -> Unit,
 ) {
     val options = remember {
-        listOf(GuardSettingsStore.DISABLED_INTERVAL_MINUTES, 15L, 60L, 180L, 360L)
+        listOf(GuardSettingsStore.DISABLED_INTERVAL_MINUTES, 15L, 30L, 60L, 180L, 360L)
     }
     var expanded by rememberSaveable { mutableStateOf(false) }
 

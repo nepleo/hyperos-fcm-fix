@@ -1,71 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp"
-    android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
-
-    <group
-        android:pivotX="54"
-        android:pivotY="54"
-        android:scaleX="0.75"
-        android:scaleY="0.75">
-
-    <!-- Ice crystals sit behind the shield and appear broken where it covers them. -->
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M23,36 L23,72 M8,54 L40,54 M12,43 L35,66 M35,43 L12,66 M23,36 L18,41 M23,36 L28,41 M23,72 L18,67 M23,72 L28,67 M8,54 L13,49 M8,54 L13,59 M40,54 L35,49 M40,54 L35,59"
-        android:strokeColor="#D9FAFF"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:strokeWidth="3.2" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M85,36 L85,72 M68,54 L100,54 M73,43 L96,66 M96,43 L73,66 M85,36 L80,41 M85,36 L90,41 M85,72 L80,67 M85,72 L90,67 M68,54 L73,49 M68,54 L73,59 M100,54 L95,49 M100,54 L95,59"
-        android:strokeColor="#D9FAFF"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:strokeWidth="3.2" />
-    <path
-        android:fillColor="#B9F4FF"
-        android:pathData="M31,39 L36,37 L40,41 L35,45 Z M29,69 L34,65 L38,70 L33,74 Z M77,37 L72,40 L75,45 L80,42 Z M79,67 L73,70 L77,75 L82,71 Z" />
-
-    <!-- Bright orange protection shield with a warm, high-contrast center. -->
-    <path
-        android:fillColor="#FF6A00"
-        android:pathData="M54,14 L83,30 L80,58 C79,75 68,88 54,96 C40,88 29,75 28,58 L25,30 Z"
-        android:strokeColor="#FFB24A"
-        android:strokeLineJoin="round"
-        android:strokeWidth="1.5" />
-    <path
-        android:fillColor="#FFF7EA"
-        android:pathData="M54,23 L74,34 L72,57 C71,68 64,77 54,84 C44,77 37,68 36,57 L34,34 Z" />
-
-    <group
-        android:pivotX="54"
-        android:pivotY="57"
-        android:scaleX="0.65"
-        android:scaleY="0.65">
-
-    <!-- Notification bell. -->
-    <path
-        android:fillColor="#08B8D0"
-        android:pathData="M54,30 C51.8,30 50,31.8 50,34 C44.5,35.6 41,40.2 41,46 L41,51 L37,57 L37,60 L71,60 L71,57 L67,51 L67,46 C67,40.2 63.5,35.6 58,34 C58,31.8 56.2,30 54,30 Z"
-        android:strokeColor="#057F99"
-        android:strokeLineJoin="round"
-        android:strokeWidth="1.2" />
-    <path
-        android:fillColor="#08B8D0"
-        android:pathData="M49,63 C49.8,68 58.2,68 59,63 Z" />
-
-    <!-- Clear delivery/health check, intentionally separated from the bell. -->
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M42,74 L50,82 L67,64"
-        android:strokeColor="#08B8D0"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:strokeWidth="7" />
-    </group>
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <group android:scaleX="0.8" android:scaleY="0.8"
+        android:translateX="11.4" android:translateY="10.8">
+        <path android:fillColor="#00000000"
+            android:pathData="M71.324 36.676 A24.5 24.5 0 1 0 78.5 54 H54"
+            android:strokeColor="#4285F4" android:strokeWidth="10.5"
+            android:strokeLineCap="butt" android:strokeLineJoin="miter" />
     </group>
 </vector>

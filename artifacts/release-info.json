@@ -1,0 +1,12 @@
+{
+  "version": "0.3.1-custom.5",
+  "versionCode": 15,
+  "bytes": 3433986,
+  "sha256": "fe0ff47c46deeda7454cf85da4f55766af83a077a6b6af1362f38c4f53bd490d",
+  "signature": "matches previous custom releases",
+  "tests": 77,
+  "lintErrors": 0,
+  "lintWarnings": 27,
+  "apk": "FCM-0.3.1-custom.5-quiet-release.apk",
+  "signerCertificateSha256": "c29a7805c9e800fd3350ddbcadbf8886bd6655be334f0817da540fa94ff44d6c"
+}

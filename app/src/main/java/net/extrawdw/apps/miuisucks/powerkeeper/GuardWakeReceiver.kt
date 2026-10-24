@@ -17,12 +17,21 @@ class GuardWakeReceiver : BroadcastReceiver() {
             return
         }
 
+        if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
+            if (!BootStartup.isEnabled(context)) {
+                AppLog.i("Receiver", "boot check disabled")
+                return
+            }
+            BootStartup.onBoot(context)
+        }
+
         val store = GuardSettingsStore(context.applicationContext)
         val settings = store.loadSettings()
         EnforcementScheduler.schedule(context.applicationContext, settings.intervalMinutes)
-        // Always recreate the daemon Shizuku monitor after boot or an app update.
-        // WorkManager retries if Shizuku has not started yet.
-        EnforcementScheduler.recoverFcmNow(context.applicationContext)
+        // Application already registered Sticky Binder/permission listeners. Do not enqueue
+        // a retry loop while the dependency is absent; the ready event submits restoration.
+        BootStartup.checkRuntimeDependency(context)
+        BootStartup.onShizukuReady(context)
 
         if (!GuardSettingsStore.isPeriodicEnforcementEnabled(settings.intervalMinutes)) {
             AppLog.i("Receiver", "periodic enforcement disabled; FCM recovery only")

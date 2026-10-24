@@ -1,6 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">HyperOS FCM Fix</string>
+    <string name="boot_startup">Check and notify at startup</string>
+    <string name="boot_startup_description">Check Shizuku after boot and restore protection when it is ready. Normal waiting and success stay silent; only missing authorization or final failures send alerts. Existing periodic jobs run independently.</string>
+    <string name="boot_notification_channel">Action required</string>
+    <string name="runtime_notification_title">FCM · Protection alert</string>
+    <string name="runtime_shizuku_missing">The Shizuku connection is unavailable. FCM cannot run checks and recovery that require it. Tap to open Shizuku and start it manually.</string>
+    <string name="runtime_permission_missing">FCM no longer has Shizuku access. Tap to open FCM and authorize it again.</string>
+    <string name="runtime_restoring">Shizuku is ready again. FCM is restoring protection.</string>
+    <string name="boot_notification_title">FCM · Startup check</string>
+    <string name="boot_shizuku_missing">FCM started, but Shizuku is not running. Protection has not been restored. Tap to open Shizuku and start it manually.</string>
+    <string name="boot_permission_missing">Shizuku is running, but FCM is not authorized. Tap to open FCM and grant access.</string>
+    <string name="boot_restoring">Shizuku is ready. FCM is restoring protection.</string>
+    <string name="boot_restored">FCM protection recovery completed after startup.</string>
+    <string name="boot_restore_failed">FCM could not complete protection operations. Automatic attempts have finished. Open FCM to check the status.</string>
+    <string name="boot_notifications_disabled">Authorization and final failure alerts cannot be shown. Allow FCM notifications to receive them.</string>
+    <string name="boot_enable_notifications">Enable notifications</string>
+    <string name="app_name">FCM</string>
+    <string name="hide_task">Hide task</string>
+    <string name="hide_task_description">Hide this app from recent tasks without changing protection settings. Reopen it from the launcher.</string>
+    <string name="hide_task_failed">Could not change recent task visibility.</string>
     <string name="app_subtitle">Background control for HyperOS</string>
 
     <string name="unsupported_device">Unsupported device</string>

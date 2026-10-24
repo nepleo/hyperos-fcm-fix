@@ -1,6 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">澎湃 FCM 修复</string>
+    <string name="boot_startup">开机检查与提醒</string>
+    <string name="boot_startup_description">开机检查 Shizuku，就绪后自动恢复保护。正常等待与恢复成功不通知，仅在缺少授权或最终失败时提醒。已设置的定时任务独立运行。</string>
+    <string name="boot_notification_channel">需要处理的提醒</string>
+    <string name="runtime_notification_title">FCM · 保护异常提醒</string>
+    <string name="runtime_shizuku_missing">Shizuku 连接已断开，FCM 暂时无法执行依赖它的检查与恢复。点此打开 Shizuku 并手动启动。</string>
+    <string name="runtime_permission_missing">FCM 的 Shizuku 授权已失效。点此进入 FCM 重新授权。</string>
+    <string name="runtime_restoring">Shizuku 已重新就绪，FCM 正在恢复保护。</string>
+    <string name="boot_notification_title">FCM · 开机检查</string>
+    <string name="boot_shizuku_missing">FCM 已自启，但 Shizuku 尚未运行，保护尚未恢复。点此打开 Shizuku 并手动启动。</string>
+    <string name="boot_permission_missing">Shizuku 已运行，但 FCM 尚未获得授权。点此进入 FCM 授权。</string>
+    <string name="boot_restoring">Shizuku 已就绪，FCM 正在恢复保护。</string>
+    <string name="boot_restored">FCM 开机保护恢复完成。</string>
+    <string name="boot_restore_failed">FCM 未能完成保护操作，自动尝试已结束。点此打开 FCM 查看状态并处理。</string>
+    <string name="boot_notifications_disabled">授权与最终失败提醒无法显示，请允许 FCM 发送通知。</string>
+    <string name="boot_enable_notifications">开启通知</string>
+    <string name="app_name">FCM</string>
+    <string name="hide_task">隐藏任务</string>
+    <string name="hide_task_description">仅隐藏最近任务中的本应用卡片，不影响保护设置。可通过桌面图标重新打开。</string>
+    <string name="hide_task_failed">无法更改最近任务显示状态。</string>
     <string name="app_subtitle">HyperOS 后台管理</string>
 
     <string name="unsupported_device">设备不受支持</string>
