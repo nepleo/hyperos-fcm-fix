@@ -163,4 +163,7 @@
     <string name="android_user_fallback">User %1$d</string>
     <string name="protection_status_failed_message">Could not check protection status: %1$s</string>
     <string name="unknown_error">Unknown error</string>
+    <string name="app_wake_title">Batch wake interval</string>
+    <string name="app_wake_description">Uses the existing app switches: app enabled + autostart managed + autostart allowed. Requires authorized Shizuku. Opens selected apps only when their process is absent; may switch screens. Sleep may delay checks. Existing processes and successful launches do not prove push delivery.</string>
+    <string name="app_wake_result_summary">Checked %1$d; started %2$d; failed or uncertain %3$d. Details in Logs.</string>
 </resources>

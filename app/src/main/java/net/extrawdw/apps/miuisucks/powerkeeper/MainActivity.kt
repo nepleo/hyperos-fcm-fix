@@ -1247,6 +1247,7 @@ private fun ProtectionCard(
                 selectedMinutes = state.settings.intervalMinutes,
                 onIntervalSelected = onIntervalSelected,
             )
+            AppWakePreference()
             HideTaskPreference()
             BootStartupPreference()
             Button(
@@ -1277,9 +1278,10 @@ private fun ProtectionCard(
 }
 
 @Composable
-private fun PeriodicEnforcementFrequencyRow(
+internal fun PeriodicEnforcementFrequencyRow(
     selectedMinutes: Long,
     onIntervalSelected: (Long) -> Unit,
+    labelRes: Int = R.string.check_frequency,
 ) {
     val options = remember {
         listOf(GuardSettingsStore.DISABLED_INTERVAL_MINUTES, 15L, 30L, 60L, 180L, 360L)
@@ -1291,7 +1293,7 @@ private fun PeriodicEnforcementFrequencyRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            stringResource(R.string.check_frequency),
+            stringResource(labelRes),
             modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

@@ -324,6 +324,51 @@ class PowerKeeperUserService : IPrivilegedService.Stub {
         return report
     }
 
+    override fun wakeApp(packageName: String, userId: Int, trigger: String): Int {
+        EnforcementCommandPlan.requireValidPackageName(packageName)
+        require(userId >= 0) { "Invalid Android user ID" }
+        fun finish(status: Int, detail: String): Int {
+            serviceLog(if (status == AppWakePlan.UNKNOWN || status == AppWakePlan.FAILED) 'W' else 'I', "AppWake",
+                "trigger=$trigger package=$packageName user=$userId status=$status $detail")
+            return status
+        }
+        val packages = runSystemCommand(
+            SystemServiceCommands.packageManager("list", "packages", "--user", userId.toString(),
+                "-U", packageName), USER_LIST_COMMAND_TIMEOUT_SECONDS,
+        )
+        if (!packages.succeeded) return finish(AppWakePlan.UNKNOWN, "uid query: ${packages.summary}")
+        val uid = PackageManagerOutput.packageUid(packages.output, packageName)
+            ?: return finish(AppWakePlan.NOT_INSTALLED, "no exact installed package match")
+        val state = runSystemCommand(
+            SystemServiceCommands.activity("get-uid-state", uid.toString()), USER_LIST_COMMAND_TIMEOUT_SECONDS,
+        )
+        val presence = if (state.succeeded) AppWakePlan.presence(state.output) else AppWakePlan.Presence.UNKNOWN
+        when (presence) {
+            AppWakePlan.Presence.PRESENT -> return finish(AppWakePlan.PRESENT, "uid=$uid state=${state.summary}")
+            AppWakePlan.Presence.UNKNOWN -> return finish(AppWakePlan.UNKNOWN, "uid=$uid state=${state.summary}; no launch")
+            AppWakePlan.Presence.ABSENT -> Unit
+        }
+        val resolved = runSystemCommand(
+            SystemServiceCommands.packageManager("resolve-activity", "--brief", "--user", userId.toString(),
+                "-a", "android.intent.action.MAIN", "-c", "android.intent.category.LAUNCHER", "-p", packageName),
+            USER_LIST_COMMAND_TIMEOUT_SECONDS,
+        )
+        val component = resolved.takeIf { it.succeeded }?.output?.let { AppWakePlan.launcherComponent(it, packageName) }
+            ?: return finish(if (resolved.succeeded) AppWakePlan.NO_LAUNCHER else AppWakePlan.FAILED, "launcher unresolved: ${resolved.summary}")
+        // Launch the real entry point; never fabricate a Firebase message or stop the app first.
+        val launched = runSystemCommand(
+            SystemServiceCommands.activity("start-activity", "-W", "--user", userId.toString(),
+                "-a", "android.intent.action.MAIN", "-c", "android.intent.category.LAUNCHER",
+                "-f", "0x10200000", "-n", component), 30L,
+        )
+        val status = when {
+            !launched.completed -> AppWakePlan.UNKNOWN
+            launched.succeeded && AppWakePlan.launchConfirmed(launched.output) -> AppWakePlan.REQUESTED
+            else -> AppWakePlan.FAILED
+        }
+        return finish(status, "uid=$uid before=${state.summary} launcher=$component result=${launched.summary}; push unverified")
+    }
+
     override fun unstop(
         packageNames: Array<out String>,
         targetUserIds: IntArray,

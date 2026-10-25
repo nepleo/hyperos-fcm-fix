@@ -123,6 +123,11 @@ object PrivilegedServiceClient {
             "$configurationReport\n$protectionReport"
         }
 
+    suspend fun wakeApp(packageName: String, userId: Int, trigger: String): Int =
+        withService("wakeApp", trigger) { connectedService ->
+            connectedService.wakeApp(packageName, userId, trigger)
+        }
+
     suspend fun unstop(
         packageNames: Collection<String>,
         targetUserIds: List<Int>,
@@ -318,5 +323,5 @@ object PrivilegedServiceClient {
     private const val CONNECTION_TIMEOUT_MILLIS = 15_000L
     // Increment whenever the UserService implementation or AIDL changes so Shizuku replaces the
     // daemon process instead of retaining code loaded from an older APK.
-    private const val USER_SERVICE_VERSION = 19
+    private const val USER_SERVICE_VERSION = 20
 }

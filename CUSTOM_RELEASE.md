@@ -1,5 +1,25 @@
 # FCM 自定义版交付说明
 
+## 最新版本：0.3.1-custom.6（versionCode 16）
+
+交付日期：2026-10-25。新增通过 Shizuku 集中唤醒应用：
+
+- 直接复用现有应用总开关及“自启动管理 → 允许”配置，不新增应用名单。
+- 在原检查频率下提供同样样式的“集中唤醒间隔”：关闭、15 分钟、30 分钟、1 小时、3 小时、6 小时，默认关闭。
+- 配置间隔后、开机恢复及 Shizuku 就绪后检查，并由独立周期任务兜底。
+- 每批逐个查询所选用户的应用进程；确认没有进程时才启动实际 launcher，已有进程跳过。
+- 无入口的系统包跳过；关闭应用开关后，后续批次不再启动该应用。
+- 最近执行摘要显示在主页，详细结果记录在现有日志页。
+
+启动可能将应用页面带到前台；休眠可能延迟调度；启动成功不代表推送已恢复。
+没有设备环境，尚未进行真实 HyperOS 重启、锁屏、Lark/Telegram 推送验证。
+
+构建、测试和签名信息见 `artifacts/release-info.json`。已签名安装包随本次对话交付。
+实现及失败处理说明见 [app-wake-recovery.md](docs/app-wake-recovery.md)。
+
+## 历史交付：custom.5
+
+
 交付日期：2026-10-25。版本：`0.3.1-custom.5`，versionCode：`15`。
 
 [下载已签名 APK](artifacts/FCM-0.3.1-custom.5-quiet-release.apk) · [校验值](artifacts/SHA256SUMS) · [版本信息](artifacts/release-info.json)

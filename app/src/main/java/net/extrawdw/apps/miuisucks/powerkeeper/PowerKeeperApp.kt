@@ -23,6 +23,7 @@ class PowerKeeperApp : Application() {
         AppLog.init(this)
         BootStartup.initializeNotifications(this)
         PrivilegedServiceClient.init(this)
+        AppWakeScheduler.schedule(this)
         // FIFO delivery off the UI thread. Register death/permission callbacks before sticky ready.
         Shizuku.addBinderDeadListener(dependencyDeadListener, dependencyHandler)
         Shizuku.addRequestPermissionResultListener(startupPermissionListener, dependencyHandler)

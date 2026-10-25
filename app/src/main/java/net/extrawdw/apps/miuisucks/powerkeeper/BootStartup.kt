@@ -118,6 +118,7 @@ internal object BootStartup {
             clearRuntimeNotice(context, RECOVERY)
             try {
                 EnforcementScheduler.recoverFcmNow(context.applicationContext, generation)
+                AppWakeScheduler.runNow(context.applicationContext)
                 val store = GuardSettingsStore(context)
                 val settings = store.loadSettings()
                 val lastRun = store.loadLastRun()

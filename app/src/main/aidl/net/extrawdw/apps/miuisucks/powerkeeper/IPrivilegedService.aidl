@@ -16,4 +16,5 @@ interface IPrivilegedService {
     String configureFcmPolling(long intervalMillis, boolean fcmReconnectEnabled, boolean nighttimeProtectionEnabled, boolean removeGameAllowlistGmsOnDisable, String trigger) = 10;
     String forceFcmReconnect(String trigger) = 11;
     String getGameAllowlistValue(String trigger) = 12;
+    int wakeApp(String packageName, int userId, String trigger) = 13;
 }

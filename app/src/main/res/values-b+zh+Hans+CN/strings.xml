@@ -160,4 +160,7 @@
     <string name="android_user_fallback">用户 %1$d</string>
     <string name="protection_status_failed_message">无法检查保护状态：%1$s</string>
     <string name="unknown_error">未知错误</string>
+    <string name="app_wake_title">集中唤醒间隔</string>
+    <string name="app_wake_description">复用应用列表：总开关开启，且自启动管理开启并设为允许的应用。通过 Shizuku 逐个检查，无进程时启动，可能切换到对应应用页面。休眠可能延迟执行；已有进程或启动成功均不代表推送正常。</string>
+    <string name="app_wake_result_summary">检查 %1$d 项，启动 %2$d 项，失败或结果不确定 %3$d 项。详情见日志。</string>
 </resources>

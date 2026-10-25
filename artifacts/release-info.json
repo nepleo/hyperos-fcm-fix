@@ -1,12 +1,13 @@
 {
-  "version": "0.3.1-custom.5",
-  "versionCode": 15,
-  "bytes": 3433986,
-  "sha256": "fe0ff47c46deeda7454cf85da4f55766af83a077a6b6af1362f38c4f53bd490d",
+  "version": "0.3.1-custom.6",
+  "versionCode": 16,
+  "bytes": 3450370,
+  "sha256": "d671dc5a3db8e5b661cc32924347c4cfea7016d9733ca16ee8bb20f059ba770e",
   "signature": "matches previous custom releases",
-  "tests": 77,
+  "tests": 81,
   "lintErrors": 0,
-  "lintWarnings": 27,
-  "apk": "FCM-0.3.1-custom.5-quiet-release.apk",
-  "signerCertificateSha256": "c29a7805c9e800fd3350ddbcadbf8886bd6655be334f0817da540fa94ff44d6c"
+  "lintWarnings": 28,
+  "apk": "FCM-0.3.1-custom.6-batch-wake.apk",
+  "signerCertificateSha256": "c29a7805c9e800fd3350ddbcadbf8886bd6655be334f0817da540fa94ff44d6c",
+  "deviceTested": false
 }

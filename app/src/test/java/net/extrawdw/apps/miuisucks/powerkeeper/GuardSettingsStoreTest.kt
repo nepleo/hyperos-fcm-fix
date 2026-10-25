@@ -7,6 +7,23 @@ import org.junit.Test
 
 class GuardSettingsStoreTest {
     @Test
+    fun batchWakeReusesOnlyEnabledAllowedAutostartPolicies() {
+        val allowed = AppPolicy("com.example.allowed", appEnabled = true,
+            autostartManaged = true, autostartEnabled = true)
+        val policies = listOf(
+            allowed,
+            allowed.copy(packageName = "com.example.disabled", appEnabled = false),
+            allowed.copy(packageName = "com.example.unmanaged", autostartManaged = false),
+            allowed.copy(packageName = "com.example.denied", autostartEnabled = false),
+            AppPolicy("com.example.unstop", appEnabled = true, autoUnstopEnabled = true),
+        )
+        val settings = GuardSettings(policies.associateBy { it.packageName }, 60L, 60000L, true, emptyList())
+        assertEquals(listOf(allowed.packageName), settings.wakeEnabledPackages)
+        assertEquals(0L, settings.wakeIntervalMinutes)
+        assertEquals(listOf("com.example.unstop"), settings.autoUnstopPackages)
+    }
+
+    @Test
     fun offIntervalRemainsDisabled() {
         assertEquals(
             GuardSettingsStore.DISABLED_INTERVAL_MINUTES,

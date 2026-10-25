@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit
 
 object EnforcementScheduler {
     fun schedule(context: Context, intervalMinutes: Long) {
+        AppWakeScheduler.schedule(context)
         val workManager = WorkManager.getInstance(context)
         val normalizedInterval = GuardSettingsStore.normalizeIntervalMinutes(intervalMinutes)
         if (GuardSettingsStore.isPeriodicEnforcementEnabled(normalizedInterval)) {

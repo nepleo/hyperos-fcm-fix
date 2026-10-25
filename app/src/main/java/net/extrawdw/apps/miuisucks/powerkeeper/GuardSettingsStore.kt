@@ -10,6 +10,7 @@ data class GuardSettings(
     val fcmReconnectEnabled: Boolean,
     val androidUsers: List<AndroidUserSelection>,
     val nighttimeFcmProtectionEnabled: Boolean = false,
+    val wakeIntervalMinutes: Long = 0L,
 ) {
     fun policyFor(packageName: String): AppPolicy =
         appPolicies[packageName] ?: AppPolicyDefaults.forPackage(packageName)
@@ -23,6 +24,12 @@ data class GuardSettings(
     val autoUnstopPackages: List<String>
         get() = appPolicies.values
             .filter { it.appEnabled && it.autoUnstopEnabled }
+            .map(AppPolicy::packageName)
+            .sorted()
+
+    val wakeEnabledPackages: List<String>
+        get() = appPolicies.values
+            .filter { it.appEnabled && it.autostartManaged && it.autostartEnabled }
             .map(AppPolicy::packageName)
             .sorted()
 
@@ -58,6 +65,7 @@ class GuardSettingsStore(context: Context) {
         ),
         androidUsers = loadAndroidUsers(),
         nighttimeFcmProtectionEnabled = loadNighttimeFcmProtectionEnabled(),
+        wakeIntervalMinutes = loadWakeIntervalMinutes(),
     )
 
     fun loadAppPolicies(): Map<String, AppPolicy> {
@@ -126,6 +134,14 @@ class GuardSettingsStore(context: Context) {
     fun setDozeManaged(packageName: String, managed: Boolean) {
         updateAppPolicy(packageName) { current ->
             (current ?: AppPolicyDefaults.forPackage(packageName)).copy(dozeManaged = managed)
+        }
+    }
+
+    fun loadWakeIntervalMinutes(): Long = normalizeIntervalMinutes(preferences.getLong(KEY_WAKE_INTERVAL_MINUTES, 0L))
+
+    fun setWakeIntervalMinutes(minutes: Long) {
+        check(preferences.edit().putLong(KEY_WAKE_INTERVAL_MINUTES, normalizeIntervalMinutes(minutes)).commit()) {
+            "Could not save wake interval"
         }
     }
 
@@ -261,6 +277,7 @@ class GuardSettingsStore(context: Context) {
         private const val PREFERENCES_NAME = "guard_settings"
         private const val KEY_APP_POLICIES = "app_policies"
         private const val KEY_APP_POLICY_SCHEMA_VERSION = "app_policy_schema_version"
+        private const val KEY_WAKE_INTERVAL_MINUTES = "wake_interval_minutes"
         private const val KEY_INTERVAL_MINUTES = "interval_minutes"
         private const val KEY_MILLET_POLLING_INTERVAL_MILLIS = "millet_polling_interval_millis"
         private const val KEY_FCM_RECONNECT_ENABLED = "fcm_reconnect_enabled"
