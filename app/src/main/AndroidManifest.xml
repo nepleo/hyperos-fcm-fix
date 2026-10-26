@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <queries>
         <package android:name="moe.shizuku.privileged.api" />
@@ -16,9 +17,10 @@
         android:name=".PowerKeeperApp"
         android:allowBackup="false"
         android:enableOnBackInvokedCallback="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/ic_fcm"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:logo="@mipmap/ic_fcm"
+        android:roundIcon="@mipmap/ic_fcm_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MIUIPowerKeeperFix"
         android:usesCleartextTraffic="false"
@@ -44,6 +46,8 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:icon="@mipmap/ic_fcm"
+            android:logo="@mipmap/ic_fcm"
             android:theme="@style/Theme.MIUIPowerKeeperFix"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>

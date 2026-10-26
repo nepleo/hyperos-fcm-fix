@@ -7,6 +7,7 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import androidx.work.workDataOf
 import java.util.concurrent.TimeUnit
 
 object EnforcementScheduler {
@@ -53,7 +54,7 @@ object EnforcementScheduler {
         )
     }
 
-    fun runNow(context: Context) {
+    fun runNow(context: Context, dependencyEvent: Boolean = false) {
         AppLog.i("Scheduler", "enqueue immediate enforcement")
         val request = OneTimeWorkRequestBuilder<EnforcementWorker>()
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 1, TimeUnit.MINUTES)
@@ -61,20 +62,23 @@ object EnforcementScheduler {
             .build()
         WorkManager.getInstance(context).enqueueUniqueWork(
             IMMEDIATE_WORK_NAME,
-            ExistingWorkPolicy.REPLACE,
+            if (dependencyEvent) ExistingWorkPolicy.APPEND_OR_REPLACE else ExistingWorkPolicy.REPLACE,
             request,
         )
     }
 
-    fun recoverFcmNow(context: Context) {
+    fun recoverFcmNow(context: Context, generation: Long) {
         AppLog.i("Scheduler", "enqueue immediate FCM recovery")
         val request = OneTimeWorkRequestBuilder<FcmRecoveryWorker>()
+            .setInputData(workDataOf(BootStartup.RECOVERY_GENERATION to generation))
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 1, TimeUnit.MINUTES)
             .addTag(WORK_TAG)
             .build()
         WorkManager.getInstance(context).enqueueUniqueWork(
             FCM_RECOVERY_NOW_WORK_NAME,
-            ExistingWorkPolicy.REPLACE,
+            // A new dependency session must follow an in-flight old session, not cancel it
+            // or get lost because KEEP sees the old task as still running.
+            ExistingWorkPolicy.APPEND_OR_REPLACE,
             request,
         )
     }

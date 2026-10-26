@@ -44,9 +44,7 @@ object InstalledFcmApps {
                     icon = runCatching { pm.getApplicationIcon(info).toImageBitmap(ICON_SIZE_PX) }.getOrNull(),
                     installed = true,
                 )
-            }.getOrElse {
-                InstalledFcmApp(packageName, packageName, null, installed = false)
-            }
+            }.getOrNull()
         }
     }
 

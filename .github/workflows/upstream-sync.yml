@@ -1,0 +1,164 @@
+# 仅在上游发布新 Release 时同步：rebase → 推送 → 跟着发自己的 Release。
+# 通知：上游有新 Release、或 rebase 冲突。无新版本时安静退出。
+name: Upstream sync
+
+on:
+  schedule:
+    # 每天 08:00（UTC+8）检查一次上游是否发了新 Release
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+    inputs:
+      upstream_tag:
+        description: "可选：指定上游 tag（留空=最新 Release）"
+        required: false
+        default: ""
+
+concurrency:
+  group: upstream-sync
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+  actions: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.sync.outputs.should_release }}
+      upstream_tag: ${{ steps.sync.outputs.upstream_tag }}
+      notice_issue: ${{ steps.sync.outputs.notice_issue }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Follow upstream release
+        id: sync
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UPSTREAM_REPO: dingwen07/hyperos-fcm-fix
+          UPSTREAM_URL: https://github.com/dingwen07/hyperos-fcm-fix.git
+          NOTICE_LABEL: upstream-release
+          CONFLICT_LABEL: upstream-sync-conflict
+          INPUT_TAG: ${{ inputs.upstream_tag }}
+        run: |
+          set -euo pipefail
+          echo "should_release=false" >> "$GITHUB_OUTPUT"
+          echo "upstream_tag=" >> "$GITHUB_OUTPUT"
+          echo "notice_issue=" >> "$GITHUB_OUTPUT"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if [ -n "${INPUT_TAG:-}" ]; then
+            UPSTREAM_TAG="$INPUT_TAG"
+          else
+            UPSTREAM_TAG="$(gh release list -R "$UPSTREAM_REPO" --limit 1 --json tagName --jq '.[0].tagName // empty')"
+          fi
+
+          if [ -z "$UPSTREAM_TAG" ]; then
+            echo "No upstream release found — quiet exit."
+            exit 0
+          fi
+          echo "upstream_tag=$UPSTREAM_TAG" >> "$GITHUB_OUTPUT"
+
+          MARKER="synced-upstream/${UPSTREAM_TAG}"
+          if git ls-remote --tags origin "refs/tags/${MARKER}" | grep -q .; then
+            echo "Already followed upstream ${UPSTREAM_TAG} (${MARKER}) — quiet exit."
+            exit 0
+          fi
+
+          gh label create "$NOTICE_LABEL" --description "上游有新 Release" --color 1D76DB 2>/dev/null || true
+          gh label create "$CONFLICT_LABEL" --description "上游 Release 自动 rebase 冲突" --color B60205 2>/dev/null || true
+
+          notice_body="$(cat <<EOF
+          上游 [\`${UPSTREAM_REPO}\`](https://github.com/${UPSTREAM_REPO}) 发布了新版本：**[${UPSTREAM_TAG}](https://github.com/${UPSTREAM_REPO}/releases/tag/${UPSTREAM_TAG})**
+
+          流水线会尝试自动 rebase 并构建本 fork 的 Release；有结果会在本 Issue 继续更新。
+
+          工作流：${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          EOF
+          )"
+          notice_body="$(printf '%s\n' "$notice_body" | sed 's/^          //')"
+
+          ISSUE_NO="$(gh issue list --label "$NOTICE_LABEL" --state all --limit 50 --json number,title --jq \
+            "[.[] | select(.title | contains(\"${UPSTREAM_TAG}\"))] | .[0].number // empty")"
+
+          if [ -z "$ISSUE_NO" ]; then
+            ISSUE_URL="$(gh issue create \
+              --title "上游发布了 ${UPSTREAM_TAG}" \
+              --label "$NOTICE_LABEL" \
+              --body "$notice_body")"
+            ISSUE_NO="$(basename "$ISSUE_URL")"
+          else
+            gh issue reopen "$ISSUE_NO" 2>/dev/null || true
+            gh issue comment "$ISSUE_NO" --body "$notice_body"
+          fi
+          echo "notice_issue=$ISSUE_NO" >> "$GITHUB_OUTPUT"
+
+          git remote remove upstream 2>/dev/null || true
+          git remote add upstream "$UPSTREAM_URL"
+          git fetch origin main
+          git fetch upstream "refs/tags/${UPSTREAM_TAG}:refs/tags/upstream-release/${UPSTREAM_TAG}"
+
+          git checkout main
+          git reset --hard origin/main
+
+          if git rebase "upstream-release/${UPSTREAM_TAG}"; then
+            git push --force-with-lease origin main
+
+            git tag -f "$MARKER" HEAD
+            git push -f origin "refs/tags/${MARKER}"
+
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+
+            gh issue comment "$ISSUE_NO" --body "已自动 rebase 到上游 \`${UPSTREAM_TAG}\` 并推送 \`main\`，正在构建并发布本 fork 的 APK Release。"
+
+            conflict_open="$(gh issue list --label "$CONFLICT_LABEL" --state open --json number --jq '.[0].number // empty')"
+            if [ -n "$conflict_open" ]; then
+              gh issue close "$conflict_open" --comment "已成功跟随上游 \`${UPSTREAM_TAG}\`，关闭冲突通知。"
+            fi
+            exit 0
+          fi
+
+          git rebase --abort || true
+
+          conflict_body="$(cat <<EOF
+          自动 rebase 到上游 \`${UPSTREAM_TAG}\` 时**发生冲突**，需要你本地处理：
+
+          \`\`\`bash
+          git fetch upstream tag ${UPSTREAM_TAG}
+          git checkout main
+          git rebase ${UPSTREAM_TAG}
+          # 解决冲突后：
+          git add -A
+          git rebase --continue
+          git push --force-with-lease origin main
+          git tag -f synced-upstream/${UPSTREAM_TAG}
+          git push -f origin refs/tags/synced-upstream/${UPSTREAM_TAG}
+          \`\`\`
+
+          然后在 Actions 里手动跑一次 **Release APK**。
+
+          工作流：${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          EOF
+          )"
+          conflict_body="$(printf '%s\n' "$conflict_body" | sed 's/^          //')"
+
+          gh issue edit "$ISSUE_NO" --add-label "$CONFLICT_LABEL"
+          gh issue comment "$ISSUE_NO" --body "$conflict_body"
+
+          exit 0
+
+  release:
+    needs: sync
+    if: needs.sync.outputs.should_release == 'true'
+    uses: ./.github/workflows/release.yml
+    with:
+      upstream_tag: ${{ needs.sync.outputs.upstream_tag }}
+      notice_issue: ${{ needs.sync.outputs.notice_issue }}
+    secrets: inherit

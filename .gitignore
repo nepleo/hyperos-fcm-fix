@@ -51,3 +51,12 @@ google-services.json
 local.properties
 .kotlin/sessions/*
 app/release/mapping.txt
+
+# Private signing material and generated Kotlin state
+*.jks
+*.keystore
+.kotlin/
+
+# Only signed release APKs in artifacts/ are versioned
+*.apk
+!/artifacts/*.apk

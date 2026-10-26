@@ -1,8 +1,11 @@
 package net.extrawdw.apps.miuisucks.powerkeeper
 
 import android.content.ActivityNotFoundException
+import android.content.BroadcastReceiver
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -65,6 +68,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
@@ -133,7 +137,21 @@ class MainActivity : ComponentActivity() {
     private var shizukuRefreshGeneration = 0
     private var applyAfterAndroidUserRefresh = false
     private var loadingInstalledApps = false
+    private var reloadInstalledAppsPending = false
+    private var packageChangeReceiverRegistered = false
     private var stalePeriodicRunning = false
+
+    private val packageChangeReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            when (intent?.action) {
+                Intent.ACTION_PACKAGE_ADDED,
+                Intent.ACTION_PACKAGE_REMOVED,
+                Intent.ACTION_PACKAGE_CHANGED,
+                Intent.ACTION_PACKAGE_REPLACED,
+                -> loadInstalledApps()
+            }
+        }
+    }
 
     private val binderReceivedListener = Shizuku.OnBinderReceivedListener {
         refreshState()
@@ -256,8 +274,30 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        if (!packageChangeReceiverRegistered) {
+            val filter = IntentFilter().apply {
+                addAction(Intent.ACTION_PACKAGE_ADDED)
+                addAction(Intent.ACTION_PACKAGE_REMOVED)
+                addAction(Intent.ACTION_PACKAGE_CHANGED)
+                addAction(Intent.ACTION_PACKAGE_REPLACED)
+                addDataScheme("package")
+            }
+            ContextCompat.registerReceiver(
+                this,
+                packageChangeReceiver,
+                filter,
+                ContextCompat.RECEIVER_NOT_EXPORTED,
+            )
+            packageChangeReceiverRegistered = true
+        }
+    }
+
     override fun onResume() {
         super.onResume()
+        TaskVisibility.apply(this)
+        BootStartup.onShizukuReady(this)
         if (::settingsStore.isInitialized) {
             refreshState()
             loadInstalledApps()
@@ -268,6 +308,14 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onStop() {
+        if (packageChangeReceiverRegistered) {
+            unregisterReceiver(packageChangeReceiver)
+            packageChangeReceiverRegistered = false
+        }
+        super.onStop()
     }
 
     override fun onDestroy() {
@@ -558,14 +606,25 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun loadInstalledApps() {
-        if (loadingInstalledApps) return
+        if (!::settingsStore.isInitialized) return
+        if (loadingInstalledApps) {
+            reloadInstalledAppsPending = true
+            return
+        }
         loadingInstalledApps = true
         lifecycleScope.launch {
-            val apps = withContext(Dispatchers.IO) {
-                InstalledFcmApps.load(applicationContext, settingsStore.loadAppPolicies().keys)
+            try {
+                val apps = withContext(Dispatchers.IO) {
+                    InstalledFcmApps.load(applicationContext, settingsStore.loadAppPolicies().keys)
+                }
+                uiState = uiState.copy(installedApps = apps)
+            } finally {
+                loadingInstalledApps = false
+                if (reloadInstalledAppsPending) {
+                    reloadInstalledAppsPending = false
+                    loadInstalledApps()
+                }
             }
-            uiState = uiState.copy(installedApps = apps)
-            loadingInstalledApps = false
         }
     }
 
@@ -1245,6 +1304,8 @@ private fun ProtectionCard(
                 selectedMinutes = state.settings.intervalMinutes,
                 onIntervalSelected = onIntervalSelected,
             )
+            HideTaskPreference()
+            BootStartupPreference()
             Button(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onApplyNow,
@@ -1278,7 +1339,7 @@ private fun PeriodicEnforcementFrequencyRow(
     onIntervalSelected: (Long) -> Unit,
 ) {
     val options = remember {
-        listOf(GuardSettingsStore.DISABLED_INTERVAL_MINUTES, 15L, 60L, 180L, 360L)
+        listOf(GuardSettingsStore.DISABLED_INTERVAL_MINUTES, 15L, 30L, 60L, 180L, 360L)
     }
     var expanded by rememberSaveable { mutableStateOf(false) }
 

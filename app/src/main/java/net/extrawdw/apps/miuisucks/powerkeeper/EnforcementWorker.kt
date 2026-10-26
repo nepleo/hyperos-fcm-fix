@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import rikka.shizuku.Shizuku
+import kotlinx.coroutines.CancellationException
 
 class EnforcementWorker(
     appContext: Context,
@@ -31,19 +32,22 @@ class EnforcementWorker(
         )
 
         if (!isShizukuAvailable()) {
-            AppLog.w("Worker/Enforcement", "Shizuku unavailable; retrying")
-            store.saveLastRun(false, "Shizuku is not running. The periodic worker will try again.")
-            return Result.retry()
+            BootStartup.checkRuntimeDependency(applicationContext)
+            AppLog.w("Worker/Enforcement", "Waiting for Shizuku Binder callback; no dependency retry")
+            store.saveLastRun(false, "Waiting for Shizuku readiness callback.")
+            return Result.success()
         }
         val permissionGranted = runCatching {
             Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
         }.getOrDefault(false)
         if (!permissionGranted) {
+            BootStartup.checkRuntimeDependency(applicationContext)
             AppLog.w("Worker/Enforcement", "Shizuku permission missing; finishing without retry")
             store.saveLastRun(false, "Shizuku permission has not been granted. Open the app to authorize it.")
             return Result.success()
         }
 
+        val generation = BootStartup.currentGeneration(applicationContext)
         return try {
             val report = PrivilegedServiceClient.enforce(
                 settings.aurogonEnabledPackages,
@@ -55,12 +59,25 @@ class EnforcementWorker(
             )
             val succeeded = !report.contains("FAILED:") && !report.contains("exit_code=")
             store.saveLastRun(succeeded, report)
+            if (succeeded) BootStartup.enforcementCompleted(applicationContext, generation)
+            else BootStartup.showEnforcementFailed(applicationContext, generation)
             AppLog.i("Worker/Enforcement", "finish succeeded=$succeeded report=$report")
             Result.success()
         } catch (throwable: Throwable) {
+            if (throwable is CancellationException) throw throwable
+            if (!isShizukuAvailable() || runCatching {
+                    Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED
+                }.getOrDefault(true)) {
+                BootStartup.checkRuntimeDependency(applicationContext)
+                store.saveLastRun(false, "Waiting for Shizuku readiness or permission callback.")
+                return Result.success()
+            }
             AppLog.e("Worker/Enforcement", "failed; retrying", throwable)
             store.saveLastRun(false, "Enforcement failed: ${throwable.message ?: throwable.javaClass.simpleName}")
-            Result.retry()
+            if (runAttemptCount + 1 < 3) Result.retry() else {
+                BootStartup.showEnforcementFailed(applicationContext, generation)
+                Result.failure()
+            }
         }
     }
 

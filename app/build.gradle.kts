@@ -12,8 +12,8 @@ android {
         applicationId = "net.extrawdw.apps.miuisucks.powerkeeper"
         minSdk = 30
         targetSdk = 37
-        versionCode = 11
-        versionName = "0.3.1"
+        versionCode = 16
+        versionName = "0.3.1-custom.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
